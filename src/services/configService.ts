@@ -191,9 +191,8 @@ export async function backupConfigBeforeUpdate(
   const configPath = getConfigPathSync(basePath, projectName);
 
   try {
-    const { exists, readTextFile, writeTextFile, mkdir, readDir, remove } = await import(
-      '@tauri-apps/plugin-fs'
-    );
+    const { exists, readTextFile, writeTextFile, mkdir, readDir, remove } =
+      await import('@tauri-apps/plugin-fs');
 
     if (!(await exists(configPath))) {
       log.info('配置文件不存在，跳过备份');
