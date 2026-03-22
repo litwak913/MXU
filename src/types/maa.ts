@@ -49,12 +49,18 @@ export interface GamepadControllerConfig {
   handle: number;
 }
 
+export interface WlRootsControllerConfig {
+    type: 'WlRoots';
+    wlrSocketPath: string;
+}
+
 /** 控制器配置 */
 export type ControllerConfig =
   | AdbControllerConfig
   | Win32ControllerConfig
   | PlayCoverControllerConfig
-  | GamepadControllerConfig;
+    | GamepadControllerConfig
+    | WlRootsControllerConfig;
 
 /** 连接状态 */
 export type ConnectionStatus = 'Disconnected' | 'Connecting' | 'Connected' | { Failed: string };

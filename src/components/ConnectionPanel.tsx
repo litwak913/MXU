@@ -1,36 +1,32 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
+import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import {useTranslation} from 'react-i18next';
 import {
-  ChevronDown,
-  Smartphone,
-  Monitor,
-  Apple,
-  Gamepad2,
-  RefreshCw,
-  Loader2,
-  Check,
   AlertCircle,
+  Apple,
+  Check,
+  CheckCircle,
+  ChevronDown,
+  Gamepad2,
+  History,
+  Loader2,
+  Monitor,
+  Presentation,
+  RefreshCw,
+  Settings2,
+  Smartphone,
   Wifi,
   WifiOff,
-  CheckCircle,
-  Settings2,
-  History,
 } from 'lucide-react';
 import clsx from 'clsx';
-import { maaService } from '@/services/maaService';
-import { useAppStore } from '@/stores/appStore';
-import { resolveI18nText } from '@/services/contentResolver';
-import type { AdbDevice, Win32Window, ControllerConfig } from '@/types/maa';
-import type { ControllerItem, ResourceItem } from '@/types/interface';
-import { computeResourcePaths } from '@/utils/resourcePath';
-import { parseWin32ScreencapMethod, parseWin32InputMethod } from '@/types/maa';
-import { getInterfaceLangKey } from '@/i18n';
-import {
-  startGlobalCallbackListener,
-  waitForCtrlResult,
-  waitForResResult,
-  autoReconnectAttempted,
-} from './connection';
+import {maaService} from '@/services/maaService';
+import {useAppStore} from '@/stores/appStore';
+import {resolveI18nText} from '@/services/contentResolver';
+import type {AdbDevice, ControllerConfig, Win32Window} from '@/types/maa';
+import {parseWin32InputMethod, parseWin32ScreencapMethod} from '@/types/maa';
+import type {ControllerItem, ResourceItem} from '@/types/interface';
+import {computeResourcePaths} from '@/utils/resourcePath';
+import {getInterfaceLangKey} from '@/i18n';
+import {autoReconnectAttempted, startGlobalCallbackListener, waitForCtrlResult, waitForResResult,} from './connection';
 
 export function ConnectionPanel() {
   const { t } = useTranslation();
@@ -83,6 +79,9 @@ export function ConnectionPanel() {
   const [playcoverAddress, setPlaycoverAddress] = useState(
     activeInstance?.savedDevice?.playcoverAddress || '127.0.0.1:1717',
   );
+  const [wlrSocketPath, setWlRootsSocketPath] = useState(
+      activeInstance?.savedDevice?.wlrSocketPath || '/run/user/1000/wayland-1'
+  )
 
   // 资源相关状态
   const [isLoadingResource, setIsLoadingResource] = useState(false);
@@ -260,6 +259,12 @@ export function ConnectionPanel() {
       setPlaycoverAddress('127.0.0.1:1717');
     }
 
+    if (savedDevice?.wlrSocketPath) {
+      setWlRootsSocketPath(savedDevice.wlrSocketPath);
+    } else {
+      setWlRootsSocketPath('/run/user/1000/wayland-1');
+    }
+
     // 如果已连接但未展开，自动折叠
     if (isInstanceConnected && isInstanceResourceLoaded) {
       setConnectionPanelExpanded(false);
@@ -329,14 +334,15 @@ export function ConnectionPanel() {
       savedDevice &&
       ((controllerType === 'Adb' && savedDevice.adbDeviceName) ||
         ((controllerType === 'Win32' || controllerType === 'Gamepad') && savedDevice.windowName) ||
-        (controllerType === 'PlayCover' && savedDevice.playcoverAddress));
+          (controllerType === 'PlayCover' && savedDevice.playcoverAddress) ||
+          (controllerType === 'WlRoots' && savedDevice.wlrSocketPath));
 
     if (hasHistoricalDevice && needsDeviceSearch) {
       // 标记该实例已尝试过自动重连
       autoReconnectAttempted.add(instanceId);
       // 触发搜索并自动连接（handleSearch 内部已有匹配+自动连接逻辑）
       handleSearch();
-    } else if (hasHistoricalDevice && controllerType === 'PlayCover') {
+    } else if (hasHistoricalDevice && (controllerType === 'PlayCover' || controllerType === 'WlRoots')) {
       // PlayCover 不需要搜索，直接连接
       autoReconnectAttempted.add(instanceId);
       handleConnect();
@@ -541,6 +547,14 @@ export function ConnectionPanel() {
         };
         deviceName = selectedWindow.window_name || selectedWindow.class_name;
         targetType = 'window';
+      } else if (controllerType === 'WlRoots') {
+        setInstanceSavedDevice(instanceId, {wlrSocketPath});
+        config = {
+          type: "WlRoots",
+          wlrSocketPath
+        };
+        deviceName = wlrSocketPath;
+        targetType = "device";
       } else {
         throw new Error(
           controllerType === 'Win32' || controllerType === 'Gamepad'
@@ -675,6 +689,8 @@ export function ConnectionPanel() {
         return <Apple className="w-4 h-4" />;
       case 'Gamepad':
         return <Gamepad2 className="w-4 h-4" />;
+      case 'WlRoots':
+        return <Presentation className="w-4 h-4"/>;
       default:
         return <Smartphone className="w-4 h-4" />;
     }
@@ -942,6 +958,7 @@ export function ConnectionPanel() {
     if (controllerType === 'Adb') return !!selectedAdbDevice;
     if (controllerType === 'Win32' || controllerType === 'Gamepad') return !!selectedWindow;
     if (controllerType === 'PlayCover') return playcoverAddress.trim().length > 0;
+    if (controllerType === 'WlRoots') return wlrSocketPath.trim().length > 0;
     return false;
   };
 
@@ -977,6 +994,9 @@ export function ConnectionPanel() {
       if (savedDevice?.playcoverAddress) {
         return truncateText(savedDevice.playcoverAddress, 6);
       }
+      if (savedDevice?.wlrSocketPath) {
+        return truncateText(savedDevice.wlrSocketPath, 6);
+      }
       // 没有设备名时回退到控制器名称
       if (currentController) {
         return getControllerDisplayName(currentController);
@@ -989,7 +1009,8 @@ export function ConnectionPanel() {
       activeInstance?.savedDevice &&
       (activeInstance.savedDevice.adbDeviceName ||
         activeInstance.savedDevice.windowName ||
-        activeInstance.savedDevice.playcoverAddress);
+          activeInstance.savedDevice.playcoverAddress ||
+          activeInstance.savedDevice.wlrSocketPath);
 
     return (
       <div className="flex items-center gap-2">
@@ -1188,6 +1209,46 @@ export function ConnectionPanel() {
                   )}
                 </button>
               </div>
+            )}
+
+            {/* WlRoots 地址输入和连接按钮 */}
+            {controllerType === 'WlRoots' && (
+                <div className="flex gap-2">
+                  <input
+                      type="text"
+                      value={wlrSocketPath}
+                      onChange={(e) => setWlRootsSocketPath(e.target.value)}
+                      placeholder="/run/user/1000/wayland-1"
+                      disabled={isConnected || isConnecting || isRunning}
+                      className={clsx(
+                          'flex-1 min-w-0 px-2.5 py-1.5 rounded-md border bg-bg-tertiary border-border text-sm',
+                          'text-text-primary placeholder:text-text-muted',
+                          'focus:outline-none focus:border-accent transition-colors',
+                          (isConnected || isRunning) && 'opacity-60 cursor-not-allowed',
+                      )}
+                  />
+                  <button
+                      onClick={handleConnect}
+                      disabled={isConnecting || isConnected || !canConnect() || isRunning}
+                      className={clsx(
+                          'flex items-center justify-center px-3 py-1.5 rounded-md border transition-colors',
+                          isConnected
+                              ? 'bg-success/20 border-success/50 cursor-not-allowed'
+                              : isConnecting || !canConnect() || isRunning
+                                  ? 'bg-bg-tertiary border-border opacity-50 cursor-not-allowed'
+                                  : 'bg-accent border-accent text-white hover:bg-accent-hover',
+                      )}
+                      title={t('controller.connect')}
+                  >
+                    {isConnecting ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-text-secondary"/>
+                    ) : isConnected ? (
+                        <Check className="w-3.5 h-3.5 text-success"/>
+                    ) : (
+                        <Wifi className="w-3.5 h-3.5"/>
+                    )}
+                  </button>
+                </div>
             )}
 
             {/* 设备选择（Adb/Win32/Gamepad）- 下拉框和刷新按钮同一行 */}

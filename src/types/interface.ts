@@ -58,7 +58,7 @@ export function normalizeAgentConfigs(
   return Array.isArray(agent) ? agent : [agent];
 }
 
-export type ControllerType = 'Adb' | 'Win32' | 'PlayCover' | 'Gamepad';
+export type ControllerType = 'Adb' | 'Win32' | 'PlayCover' | 'Gamepad' | 'WlRoots';
 
 export interface ControllerItem {
   name: string;
@@ -78,6 +78,7 @@ export interface ControllerItem {
   win32?: Win32Config;
   playcover?: PlayCoverConfig;
   gamepad?: GamepadConfig;
+    wlroots?: WlRootsConfig;
 }
 
 export interface Win32Config {
@@ -97,6 +98,10 @@ export interface GamepadConfig {
   window_regex?: string;
   gamepad_type?: 'Xbox360' | 'DualShock4' | 'DS4';
   screencap?: string;
+}
+
+export interface WlRootsConfig {
+
 }
 
 export interface ResourceItem {
@@ -233,6 +238,7 @@ export interface SavedDeviceInfo {
   adbDeviceName?: string;
   windowName?: string;
   playcoverAddress?: string;
+    wlrSocketPath?: string;
 }
 
 // 定时执行策略
