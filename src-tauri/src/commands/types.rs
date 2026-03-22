@@ -89,6 +89,9 @@ pub enum ControllerConfig {
         #[serde(default)]
         uuid: Option<String>,
     },
+    WlRoots {
+        wlr_socket_path: String,
+    },
 }
 
 /// 连接状态

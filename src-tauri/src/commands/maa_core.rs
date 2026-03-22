@@ -551,6 +551,9 @@ pub async fn maa_connect_controller(
 
                 Controller::new_gamepad(hwnd, gp_type, screencap).map_err(|e| e.to_string())?
             }
+            ControllerConfig::WlRoots { wlr_socket_path } => {
+                Controller::new_wlroots(wlr_socket_path).map_err(|e| e.to_string())?
+            }
         };
 
         // 注册回调
