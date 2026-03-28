@@ -551,7 +551,7 @@ export function ConnectionPanel() {
         setInstanceSavedDevice(instanceId, {wlrSocketPath});
         config = {
           type: "WlRoots",
-          wlrSocketPath
+          wlr_socket_path: wlrSocketPath,
         };
         deviceName = wlrSocketPath;
         targetType = "device";

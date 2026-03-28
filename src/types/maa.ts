@@ -51,7 +51,7 @@ export interface GamepadControllerConfig {
 
 export interface WlRootsControllerConfig {
     type: 'WlRoots';
-    wlrSocketPath: string;
+    wlr_socket_path: string;
 }
 
 /** 控制器配置 */
