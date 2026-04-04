@@ -34,6 +34,7 @@ import { findSwitchCase } from '@/utils/optionHelpers';
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 
+import { logToStdout } from '@/utils/logStdout';
 import {
   generateId,
   initializeAllOptionValues,
@@ -43,6 +44,12 @@ import {
 } from './helpers';
 // 从独立模块导入类型和辅助函数
 import type { AppState, LogEntry, TaskRunStatus } from './types';
+
+function forwardLogToStdout(message: string) {
+  const plain = message.replace(/<[^>]*>/g, '').trim();
+  if (!plain) return;
+  logToStdout(plain);
+}
 
 // 重新导出类型供外部使用
 export type {
@@ -1703,6 +1710,8 @@ export const useAppStore = create<AppState>()(
           timestamp: new Date(),
           ...log,
         };
+
+        forwardLogToStdout(log.message);
         // 限制每个实例最多保留 N 条日志（超出丢弃最旧的）。
         // 这里也做归一化，避免配置错误导致无限增长；与 UI
         // 限制保持一致：[100, 10000]，默认 2000。

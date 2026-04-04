@@ -105,3 +105,12 @@ pub fn maa_get_cached_win32_windows(
         .map_err(|e| e.to_string())?;
     Ok(cached.clone())
 }
+
+/// 由前端调用，将已格式化的日志行输出到 stdout
+#[tauri::command]
+pub fn log_to_stdout(message: String) {
+    let timestamp = chrono::Local::now().format("%Y-%m-%d %H:%M:%S.%3f");
+    for line in message.lines() {
+        println!("[{timestamp}] {line}");
+    }
+}
