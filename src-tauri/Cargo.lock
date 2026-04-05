@@ -6303,7 +6303,7 @@ dependencies = [
 [[package]]
 name = "winsafe"
 version = "0.0.27"
-source = "git+https://github.com/rodrigocfd/winsafe.git?rev=7e82b1c7082cc24620f5a73c17c7bd8b682d37f3#7e82b1c7082cc24620f5a73c17c7bd8b682d37f3"
+source = "git+https://github.com/rodrigocfd/winsafe.git?rev=908010cd6ecabad500fe06a32a8d3fa5fc0fec40#908010cd6ecabad500fe06a32a8d3fa5fc0fec40"
 
 [[package]]
 name = "wit-bindgen"

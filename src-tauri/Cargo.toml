@@ -54,7 +54,7 @@ debug = true
 
 [target.'cfg(windows)'.dependencies]
 # FIXME: winsafe new release
-winsafe = { git = "https://github.com/rodrigocfd/winsafe.git", rev = "7e82b1c7082cc24620f5a73c17c7bd8b682d37f3", features = [
+winsafe = { git = "https://github.com/rodrigocfd/winsafe.git", rev = "908010cd6ecabad500fe06a32a8d3fa5fc0fec40", features = [
     "advapi",
     "kernel",
     "shell",
