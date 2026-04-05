@@ -7,6 +7,7 @@ use super::types::WebView2DirInfo;
 use super::utils::get_maafw_dir;
 use log::{info, warn};
 use std::sync::atomic::{AtomicBool, Ordering};
+use winsafe::co::SEE_MASK;
 
 #[cfg(windows)]
 const CREATE_NO_WINDOW: u32 = 0x0800_0000;
@@ -51,7 +52,7 @@ pub fn is_elevated() -> bool {
 pub fn restart_as_admin(app_handle: tauri::AppHandle) -> Result<(), String> {
     #[cfg(windows)]
     {
-        use winsafe::co::SW;
+        use winsafe::co::{SEE_MASK, SW};
         use winsafe::{ShellExecuteEx, SHELLEXECUTEINFO};
 
         let exe_path = std::env::current_exe().map_err(|e| format!("获取程序路径失败: {}", e))?;
@@ -64,6 +65,7 @@ pub fn restart_as_admin(app_handle: tauri::AppHandle) -> Result<(), String> {
             file: &exe_path_str,
             verb: Option::from("runas"),
             show: SW::SHOWNORMAL,
+            mask: SEE_MASK::NOASYNC | SEE_MASK::FLAG_NO_UI,
             ..Default::default()
         });
 

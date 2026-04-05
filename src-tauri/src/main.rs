@@ -41,7 +41,7 @@ fn main() {
         // 启动时自动请求管理员权限：如果当前不是管理员，则自提权重启并退出当前进程
         // 说明：用户在 UAC 对话框中取消时，ShellExecuteEx 会返回 Err，此时继续以普通权限启动。
         // 调试模式下不请求管理员权限，方便开发调试
-        if !cfg!(debug_assertions) && !mxu_lib::commands::system::is_elevated() {
+        if cfg!(debug_assertions) && !mxu_lib::commands::system::is_elevated() {
             let exe_path = match std::env::current_exe() {
                 Ok(p) => p,
                 Err(_) => {
@@ -51,13 +51,14 @@ fn main() {
                 }
             };
 
-            use winsafe::co::SW;
+            use winsafe::co::{SEE_MASK, SW};
             use winsafe::{ShellExecuteEx, SHELLEXECUTEINFO};
 
             let result = ShellExecuteEx(&SHELLEXECUTEINFO {
                 file: &exe_path.to_string_lossy(),
                 verb: Option::from("runas"),
                 show: SW::SHOWNORMAL,
+                mask: SEE_MASK::NOASYNC | SEE_MASK::FLAG_NO_UI,
                 ..Default::default()
             });
 
